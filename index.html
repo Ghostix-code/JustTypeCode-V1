@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JustTypeCode - Hacker Sim</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #00ffea;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 18px;
+      margin: 0;
+      padding: 20px;
+      user-select: none;
+      overflow: hidden; /* prevent scroll during splash */
+    }
+
+    #terminal {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 20px;
+      opacity: 1;
+      transition: opacity 1s ease;
+    }
+
+    .line {
+      display: block;
+    }
+
+    #cursor {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      background-color: #00ffea;
+      margin-left: 2px;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .rgb {
+      animation: rgbColor 2s linear infinite;
+    }
+
+    @keyframes rgbColor {
+      0%   { color: red; }
+      25%  { color: lime; }
+      50%  { color: cyan; }
+      75%  { color: magenta; }
+      100% { color: yellow; }
+    }
+
+    ::selection {
+      background: #003333;
+      color: #00ffea;
+    }
+
+    /* Watermark styling */
+    #watermark {
+      position: fixed;
+      bottom: 15px;
+      right: 20px;
+      color: #00ffe7;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      pointer-events: none;
+      user-select: none;
+      z-index: 9999;
+      text-shadow:
+        0 0 5px #00ffe7,
+        0 0 10px #00ffe7,
+        0 0 20px #00ffe7,
+        0 0 40px #00ffe7;
+      opacity: 0.15;
+      transition: opacity 0.3s ease;
+    }
+
+    #watermark:hover {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    /* Splash screen styles */
+    #splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      color: #00ffea;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Courier New', monospace;
+      z-index: 10000;
+      user-select: none;
+      text-align: center;
+      opacity: 1;
+      transition: opacity 1s ease;
+    }
+
+    #splash h1 {
+      font-size: 64px;
+      letter-spacing: 8px;
+      margin: 0 0 20px 0;
+      text-shadow:
+        0 0 10px #00ffea,
+        0 0 20px #00ffea,
+        0 0 30px #00ffea;
+    }
+
+    #splash p {
+      font-size: 22px;
+      letter-spacing: 3px;
+      margin: 0;
+      opacity: 0.7;
+    }
+
+    /* Gumroad button styling */
+    #gumroadBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #00ffea, #0077ff);
+      color: #000;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0;
+      user-select: none;
+      box-shadow:
+        0 0 8px #00ffea,
+        0 0 20px #0077ff;
+      transition: opacity 1s ease;
+      z-index: 11000;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border: none;
+      outline: none;
+    }
+    #gumroadBtn:hover {
+      background: linear-gradient(135deg, #00ccbb, #0055cc);
+      color: #fff;
+      box-shadow:
+        0 0 12px #00ffea,
+        0 0 30px #0077ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <h1>JustTypeCode</h1>
+    <p>Press 1 for Manual | 2 for Auto | 3 for RGB</p>
+    <p style="margin-top:10px; font-size:14px; opacity:0.5;">Press double space to skip</p>
+  </div>
+
+  <div id="terminal"></div>
+  <div id="watermark">JustTypeCode V1</div>
+  <button id="gumroadBtn" onclick="window.open('https://khuzaima72.gumroad.com/l/JustTypeCode', '_blank')">🔌 Power the Terminal</button>
+
+  <script>
+    const splash = document.getElementById('splash');
+    const terminal = document.getElementById('terminal');
+    const gumroadBtn = document.getElementById('gumroadBtn');
+
+    // Ultimate combined hacker phrases list
+    const codeLines = [
+      'Connecting to target...',
+      'Bypassing firewall...',
+      'Access granted to root@mainframe',
+      'Decrypting secure data stream...',
+      'Injecting backdoor...',
+      'Shell spawned at 127.0.0.1',
+      'Running brute force sequence...',
+      'Exploit executed successfully!',
+      'Payload delivery: complete',
+      'Session hijacked on port 443',
+      'System override initiated...',
+      '>>> sudo killall security',
+      'Monitoring live packets...',
+      'Connection encrypted using RSA-4096',
+      'Gaining persistent access...',
+      'Downloading credential dump...',
+      'Honeypot detected — rerouting...',
+      'Remote command injected!',
+      'Zero-day vulnerability exploited!',
+      'Firewall neutralized.',
+
+      "D4t4 br3ach d3t3ct3d",
+      "3xpl01t c0d3 r4nn1ng",
+      "1nj3ct1ng m4lw4r3 n0w",
+      "b1n4ry d4t4 c0rrupt",
+      "r00t 4cc3ss gr4nt3d",
+      "s3rv3r c0nn3ct1on l0st",
+      "c0nn3ct1ng t0 n0d3",
+      "f1r3w4ll byp4ss 3n4bl3d",
+      "r3v3rs5 sh3ll 0p3n",
+      "k3ystroke l0gg1ng st4rt",
+      "d3crypt1ng c0mm4nds n0w",
+      "p4ck3t sn1ff3r r4nn1ng",
+      "3sc4p1ng s4ndb0x m0d3",
+      "3rr0r c0rr3ct1on f41l3d",
+      "0v3rfl0w 3xp10it l4unch",
+      "b00tb00t s3qu3nc3 h4ck3d",
+      "s0ckt3t tunn3l c0nn3ct3d",
+      "d4t4 m0d1f1c4t10n d3t3ct3d",
+      "p0rt sc4nn1ng c0mpl3t3",
+      "l0g1n br3ach 4ct1v3",
+      "3xtr4ct1ng c0nf1d3nt14l f1l3s",
+      "k3rn3l p4n1c t3rm1n4t3d",
+      "v1rus r3m0v4l f41l3d",
+      "r3m0t3 sh3ll 1nst4ll",
+      "s3cr3t k3y st34l3d",
+      "t4rg3t s3rv3r h4ck3d",
+      "d3t3ct1ng 1ntrus10n 4tt3mpt",
+      "p4ylo4d 3x3cut10n c0mpl3t3",
+      "f1r3w4ll l0g4n4lys1s r4nn1ng",
+      "c4ptur1ng 4uth t0k3ns",
+      "3sc4l4t1ng pr1v1l3g3s n0w",
+      "n3tw0rk f10w m0n1t0r",
+      "b1n4ry r3pl4c3m3nt c0mpl3t3",
+      "c0d3 0bfusc4t10n d3t3ct3d",
+      "h4ck1ng s3qu3nc3 st4rt3d",
+      "d4t4 b1n1ng r4w f1l3",
+      "b00t l00p d3t3ct3d",
+      "m4l1c10us c0d3 r3m0v3d",
+      "r3s3tt1ng p4ssw0rd f41l3d",
+      "v1rtu4l m4ch1n3 h4ck3d",
+      "r3c0v3r1ng d3l3t3d f1l3s",
+      "k3y l0g l0g1ng",
+      "d3t3ct1ng c0nn3ct10n l4g",
+      "s0ckt3t c0nn3ct10n t1m3d",
+      "r3m0t3 c0mm4nd r3c31v3d",
+      "b1n4ry d4t4 r3tr13v3d",
+      "3xp10it v3ct0r l4unch3d",
+      "d4t4 fl0w 1nt3rrupt3d",
+      "b00t pr0c3ss m0n1t0r3d",
+      "r3m0v1ng l0g tr4c3s",
+
+      "Cracking firewall now",
+      "Injecting spoof packet",
+      "Access granted successfully",
+      "Bypassing login screen",
+      "Downloading root files",
+      "Encrypting server response",
+      "Initiating brute force",
+      "Exploit found vulnerable",
+      "Hashing password string",
+      "Terminating active session",
+      "Tracing connection path",
+      "Gathering intel data",
+      "Reverse shell opened",
+      "Ping flood attack",
+      "Decrypting secure socket",
+      "Spoofing MAC address",
+      "Session hijack attempt",
+      "Uploading payload script",
+      "Logging keystroke input",
+      "Activating stealth protocol",
+      "Compiling malicious binary",
+      "Sniffing network traffic",
+      "Privilege escalation complete",
+      "Obfuscating IP logs",
+      "Parsing system logs",
+      "Injecting SQL payload",
+      "Target locked in",
+      "Executing silent command",
+      "Port scanning initiated",
+      "Analyzing login pattern",
+      "Running exploit script",
+      "Binary overwrite success",
+      "Modifying DNS route",
+      "Scanning open ports",
+      "Botnet sync started",
+      "Dropping malware agent",
+      "Rerouting proxy traffic",
+      "Compromising admin access",
+      "Cloning access token",
+      "Hijacking data stream",
+      "Overriding session timeout",
+      "Accessing shadow directory",
+      "Cracking hash digest",
+      "Intercepting HTTPS packets",
+      "Initiating zero-day exploit",
+      "Tunneling through firewall",
+      "Deploying backdoor patch",
+      "Gaining root access",
+      "Breaching internal firewall",
+      "Exfiltrating sensitive data",
+      "Spoof handshake request",
+      "Phishing email sent",
+      "Reading system memory",
+      "Rewriting boot sequence",
+      "Opening command shell",
+      "Installing remote keylogger",
+      "Scanning active directory",
+      "Breach detected logging",
+      "Buffer overflow triggered",
+      "Scraping internal database",
+      "Keypair mismatch resolved",
+      "Sending denial packet",
+      "Data leak detected",
+      "Encrypting file system",
+      "Virus compiled successfully",
+      "Authenticating with spoof",
+      "IP spoofing successful",
+      "Remote access granted",
+      "C2 server connected",
+      "DNS cache poisoned",
+      "Breaking AES encryption",
+      "Hijack request detected",
+      "Dumping memory blocks",
+      "Unlocking vault key",
+      "Escaping sandbox restriction",
+      "Code injected stealthily",
+      "File injection complete",
+      "Masking digital fingerprint",
+      "WiFi handshake intercepted",
+      "Server shutdown command",
+      "Terminating kernel process",
+      "Forkbomb deployed instantly",
+      "SSH login bypassed",
+      "Proxy tunnel secured",
+      "Cloning device identity",
+      "Server ping dropped",
+      "Executing root override",
+      "Device located remotely",
+      "Malicious thread running",
+      "Payload executed silently",
+      "Virtual machine breached",
+      "Binary signature altered",
+      "Secure shell opened",
+      "Sending exploit vector",
+      "Credential dump complete",
+      "Intrusion point found",
+      "User privileges dropped",
+      "Checking network status",
+      "Tampering registry key",
+      "Operation successful complete"
+    ];
+
+    let wordLength = 0;
+    let autoTyping = false;
+    let autoInterval = null;
+    let currentMode = 1; // Default to manual
+    let awaitingRGBChoice = false;
+    let rgbChoiceMade = false;
+
+    const cursor = document.createElement('span');
+    cursor.id = 'cursor';
+    terminal.appendChild(cursor);
+
+    function addCodeLine(clean = true) {
+      const line = codeLines[Math.floor(Math.random() * codeLines.length)];
+      const lineElem = document.createElement('div');
+      lineElem.className = 'line';
+      lineElem.textContent = '> ' + (clean ? line : scrambleLine(line));
+      terminal.insertBefore(lineElem, cursor);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function scrambleLine(line) {
+      return line.split('').map(char =>
+        Math.random() < 0.1 ? ['$', '#', '%', '@', '!', '*', '&'][Math.floor(Math.random() * 7)] : char
+      ).join('');
+    }
+
+    function startAutoTyping() {
+      if (autoTyping) return;
+      autoTyping = true;
+      autoInterval = setInterval(() => addCodeLine(), 100);
+    }
+
+    function stopAutoTyping() {
+      autoTyping = false;
+      clearInterval(autoInterval);
+    }
+
+    function toggleMode(mode) {
+      stopAutoTyping();
+      currentMode = mode;
+      terminal.classList.remove('rgb');
+      rgbChoiceMade = false;
+      awaitingRGBChoice = false;
+
+      if (mode === 1) {
+        showPrompt(">> MANUAL mode enabled. Type to generate code lines.");
+      }
+      if (mode === 2) {
+        showPrompt(">> AUTO mode enabled. Auto typing started.");
+        startAutoTyping();
+      }
+      if (mode === 3) {
+        terminal.classList.add('rgb');
+        showPrompt("RGB Mode Active - Manual or Auto? (Y/N)");
+        awaitingRGBChoice = true;
+      }
+    }
+
+    function showPrompt(text) {
+      const prompt = document.createElement('div');
+      prompt.className = 'line';
+      prompt.textContent = '> ' + text;
+      terminal.insertBefore(prompt, cursor);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Initial burst lines on load
+    function initTerminal() {
+      for (let i = 0; i < 10; i++) addCodeLine();
+    }
+
+    // Splash fadeout and start terminal
+    function startTerminalAfterSplash() {
+      splash.style.opacity = '0';
+      document.body.style.overflow = 'auto'; // enable scroll after splash fadeout
+
+      setTimeout(() => {
+        splash.style.display = 'none';
+        initTerminal();
+        toggleMode(1); // Start in manual mode by default
+      }, 1000); // wait for fadeout transition
+    }
+
+    // Auto start after 7 seconds unless skipped
+    const splashTimeout = setTimeout(startTerminalAfterSplash, 7000);
+
+    // Double space to skip splash
+    let lastSpaceTime = 0;
+    window.addEventListener('keydown', (e) => {
+      if (splash.style.display !== 'none') {
+        if (e.key === ' ') {
+          const now = Date.now();
+          if (now - lastSpaceTime < 400) { // 400 ms max between spaces
+            clearTimeout(splashTimeout);
+            startTerminalAfterSplash();
+          }
+          lastSpaceTime = now;
+        }
+      }
+
+      // If waiting for RGB mode choice, only accept y or n
+      if (awaitingRGBChoice) {
+        if (e.key.toLowerCase() === 'y') {
+          showPrompt(">> AUTO mode selected.");
+          startAutoTyping();
+          currentMode = 2;
+          rgbChoiceMade = true;
+          awaitingRGBChoice = false;
+        } else if (e.key.toLowerCase() === 'n') {
+          showPrompt(">> MANUAL mode selected.");
+          stopAutoTyping();
+          currentMode = 1;
+          rgbChoiceMade = true;
+          awaitingRGBChoice = false;
+        }
+        e.preventDefault();
+        return;
+      }
+
+      // Mode switch keys (1, 2, 3) if not locked in RGB prompt
+      if (!awaitingRGBChoice) {
+        if (e.key === '1') toggleMode(1);
+        else if (e.key === '2') toggleMode(2);
+        else if (e.key === '3') toggleMode(3);
+      }
+
+      // Manual typing mode: type any alphanumeric keys to trigger lines after 4 letters typed
+      if (currentMode === 1 && !autoTyping) {
+        if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
+          wordLength++;
+          if (wordLength >= 4) {
+            addCodeLine(true);
+            wordLength = 0;
+          }
+        }
+      }
+    });
+
+    // Button fade in/out loop
+    function fadeInButton() {
+      gumroadBtn.style.opacity = '1';
+      setTimeout(fadeOutButton, 5000); // visible for 5 seconds
+    }
+    function fadeOutButton() {
+      gumroadBtn.style.opacity = '0';
+      setTimeout(fadeInButton, 3000); // fade in again after 3 seconds
+    }
+    // Start the fade cycle after page load
+    window.addEventListener('load', () => {
+      setTimeout(fadeInButton, 1000);
+    });
+  </script>
+</body>
+</html>
